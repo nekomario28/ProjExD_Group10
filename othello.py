@@ -27,6 +27,20 @@ class Othello:
         self.turn = BLACK
         self.turn_count = 0  
 
+        # 地雷の数（変更可能）
+        self.mine_count = 1
+
+        # 地雷の座標を保存
+        self.mines = []
+
+        while len(self.mines) < self.mine_count:
+            x = random.randint(0, BOARD_SIZE - 1)
+            y = random.randint(0, BOARD_SIZE - 1)
+
+            # 最初の4つの石の場所には置かない
+            if self.board[x][y] is None and (x, y) not in self.mines:
+                self.mines.append((x, y))
+
     def draw_board(self):
         screen.fill(GREEN)
         for x in range(BOARD_SIZE):
@@ -101,6 +115,14 @@ class Othello:
             self.display_result(result)
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
+
+            # 地雷チェック
+            if (x, y) in self.mines:
+                print("💣 地雷発動！")
+                self.board[x][y] = None      # 置いた石を消す
+                self.mines.remove((x, y))    # 地雷は一度使ったら消える
+            else:
+                self.flip_stones(x, y)
             self.flip_stones(x, y)
 
 
