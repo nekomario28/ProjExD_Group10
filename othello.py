@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random ##disasuter no tameni
 
 # 定数の定義
 BLACK = (0, 0, 0)
@@ -24,6 +25,7 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
+        self.turn_count = 0  
 
     def draw_board(self):
         screen.fill(GREEN)
@@ -100,6 +102,12 @@ class Othello:
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
             self.flip_stones(x, y)
+
+
+            self.turn_count += 1  # 1手進んだら増やす
+            if self.turn_count >= 15:
+                self.disaster()
+
             self.turn = WHITE if self.turn == BLACK else BLACK
             if not self.has_valid_move() or self.is_board_full():
                 self.turn = WHITE if self.turn == BLACK else BLACK
@@ -116,6 +124,27 @@ class Othello:
         pygame.time.wait(10000)
         pygame.quit()
         sys.exit()
+    
+    def disaster(self):
+        r = random.random()  # 0.0以上1.0未満
+
+        if r <= 0.05:
+            print("災害発生！10個の駒が消えました！")
+
+            # 石がある場所を集める
+            stones = []
+            for x in range(BOARD_SIZE):
+                for y in range(BOARD_SIZE):
+                    if self.board[x][y] is not None:
+                        stones.append((x, y))
+
+            # 最大10個選ぶ
+            num = min(10, len(stones))
+            remove_stones = random.sample(stones, num)
+
+            # 消す
+            for x, y in remove_stones:
+                self.board[x][y] = None
 
 def main():
     game = Othello()
