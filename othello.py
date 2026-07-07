@@ -8,7 +8,7 @@ WHITE = (255, 255, 255)
 GREEN = (0, 128, 0)
 YELLOW = (255, 155, 0)
 SIZE = 600
-BOARD_SIZE = 6
+BOARD_SIZE = 8
 GRID_SIZE = SIZE // BOARD_SIZE
 
 # Pygameの初期化
@@ -25,13 +25,15 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
-        self.turn_count = 0  
+        self.turn_count = 0  ##ターンカウント
 
-        # 地雷の数（変更可能）
-        self.mine_count = 1
+        
+        
 
-        # 地雷の座標を保存
-        self.mines = []
+        self.mine_count = 1          # 地雷の数（変更可能）
+        self.mines = []              # 地雷の座標を保存
+        self.disaster_count = 0      # 災害発生回数
+        self.max_disaster = 2        # 災害最大2回
 
         while len(self.mines) < self.mine_count:
             x = random.randint(0, BOARD_SIZE - 1)
@@ -116,9 +118,9 @@ class Othello:
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
 
-            # 地雷チェック
+            # 地雷
             if (x, y) in self.mines:
-                print("💣 地雷発動！")
+                print("地雷発動！")
                 self.board[x][y] = None      # 置いた石を消す
                 self.mines.remove((x, y))    # 地雷は一度使ったら消える
             else:
@@ -148,6 +150,8 @@ class Othello:
         sys.exit()
     
     def disaster(self):
+        if self.disaster_count >= self.max_disaster:
+            return
         r = random.random()  # 0.0以上1.0未満
 
         if r <= 0.05:
