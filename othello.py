@@ -29,20 +29,68 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
-
+        # スキル関連
+        self.skill = None
+        self.locked = {}
+        self.sp = {
+            BLACK: 100,
+            WHITE: 100
+        }
+        self.used_skill = False
+        
     def draw_board(self):
         screen.fill(GREEN)
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
                 rect = pygame.Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE)
+                # 封印マス
+                if (x, y) in self.locked:
+                    pygame.draw.rect(screen, (180, 0, 0), rect)
                 pygame.draw.rect(screen, BLACK, rect, 1)
                 if self.board[x][y] is not None:
                     self.draw_stone(x, y, self.board[x][y])
+                    # ×マーク表示
+                    if (x, y) in self.locked:
+                        font = pygame.font.Font(None, 40)
+                        text = font.render("X", True, WHITE)
+                        screen.blit(text, text.get_rect(center=rect.center))
+        font = pygame.font.Font(None, 30)
+        turn = "BLACK" if self.turn == BLACK else "WHITE"
+        text = font.render(
+                f"Turn:{turn}  SP:{self.sp[self.turn]}   L:Lock C:Corner B:Bomb",
+                True,
+                WHITE
+            )
+        if self.skill == "lock":
+            text = font.render("LOCK MODE : Click a square", True, (255, 0, 0))
+        if self.skill == "corner":
+            text = font.render("CORNER MODE : Click a corner", True, (0,255,255))
+        if self.skill == "corner":
+            for x, y in [(0,0),(0,7),(7,0),(7,7)]:
+
+                rect = pygame.Rect(
+                    x*GRID_SIZE,
+                    y*GRID_SIZE,
+                    GRID_SIZE,
+                    GRID_SIZE
+                )
+
+                pygame.draw.rect(
+                    screen,
+                    (0,255,255),
+                    rect,
+                    4
+                )
+        if self.skill == "bomb":
+            text = font.render("BOMB MODE : click a square", True, (255, 0, 255))
+        screen.blit(text,(10,10))
 
     def draw_stone(self, x, y, color):
         pygame.draw.circle(screen, color, (x * GRID_SIZE + GRID_SIZE // 2, y * GRID_SIZE + GRID_SIZE // 2), GRID_SIZE // 2 - 4)
 
     def is_valid_move(self, x, y):
+        if (x, y) in self.locked:
+            return False
         if self.board[x][y] is not None:
             return False
         opponent = WHITE if self.turn == BLACK else BLACK
@@ -106,6 +154,8 @@ class Othello:
             self.board[x][y] = self.turn
             self.flip_stones(x, y)
             self.turn = WHITE if self.turn == BLACK else BLACK
+            self.used_skill = False
+            self.update_locked()
             if not self.has_valid_move() or self.is_board_full():
                 self.turn = WHITE if self.turn == BLACK else BLACK
                 if not self.has_valid_move():
@@ -121,6 +171,101 @@ class Othello:
         pygame.time.wait(10000)
         pygame.quit()
         sys.exit()
+        
+    def update_locked(self):
+        """
+        封印スキルのターン数管理
+        """
+        remove = []
+
+        for pos in self.locked:
+            self.locked[pos] -= 1
+            if self.locked[pos] <= 0:
+                    remove.append(pos)
+
+        for pos in remove:
+            del self.locked[pos]
+            
+    def use_lock(self, x, y):
+        """
+        封印スキル
+        Lキーで発動
+        """
+        if self.used_skill:
+            return
+        
+        if self.sp[self.turn] < 3:
+            return
+
+        if self.board[x][y] is not None:
+            return
+
+        if (x, y) in self.locked:
+            return
+
+        self.locked[(x, y)] = 2
+        self.sp[self.turn] -= 3
+        self.used_skill = True
+        self.skill = None
+
+    def use_corner(self, x, y):
+        """
+        強制角取りスキル
+        """
+        if self.used_skill:
+            return
+
+        if self.sp[self.turn] < 8:
+            return
+
+        corners = [(0,0),(0,7),(7,0),(7,7)]
+
+        if (x, y) not in corners:
+            return
+
+        if self.board[x][y] is not None:
+            return
+
+        if (x, y) in self.locked:
+            return
+
+        self.board[x][y] = self.turn
+        self.sp[self.turn] -= 8
+        self.used_skill = True
+        self.skill = None
+
+    def use_bomb(self, x, y):
+        """
+        爆弾スキル
+        """
+        if self.used_skill:
+            return
+
+        if self.sp[self.turn] < 5:
+            return
+
+        if not self.is_valid_move(x, y):
+            return
+
+        self.board[x][y] = self.turn
+        self.flip_stones(x, y)
+        
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+
+                nx = x + dx
+                ny = y + dy
+
+                if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
+                    if self.board[nx][ny] is not None:
+                        self.board[nx][ny] = self.turn
+
+        self.sp[self.turn] -= 5
+        self.used_skill = True
+        self.skill = None
+        self.turn = WHITE if self.turn == BLACK else BLACK
+        self.used_skill = False
+        self.update_locked()
 
 def main():
     game = Othello()
@@ -133,11 +278,35 @@ def main():
                 x, y = event.pos
                 x //= GRID_SIZE
                 y //= GRID_SIZE
-                game.next_move(x, y)
+                if game.skill == "lock":
+                    game.use_lock(x, y)
+                elif game.skill == "corner":
+                    game.use_corner(x, y)
+                elif game.skill == "bomb":
+                    game.use_bomb(x, y)
+                else:
+                    game.next_move(x, y)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_l:
+                    if game.skill == "lock":
+                        game.skill = None
+                    else:
+                        game.skill = "lock"
+                if event.key == pygame.K_c:
+                    if game.skill == "corner":
+                        game.skill = None
+                    else:
+                        game.skill = "corner"
+                if event.key == pygame.K_b:
+                    if game.skill == "bomb":
+                        game.skill = None
+                    else:
+                        game.skill = "bomb"
         game.draw_board()
         pygame.display.flip()
     pygame.quit()
     sys.exit()
+    
 
 if __name__ == "__main__":
     main()
