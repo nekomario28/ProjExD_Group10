@@ -1,5 +1,10 @@
 import pygame
 import sys
+import os
+import random
+import math
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # 定数の定義
 BLACK = (0, 0, 0)
