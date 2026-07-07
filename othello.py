@@ -15,6 +15,10 @@ SIZE = 600
 BOARD_SIZE = 8
 GRID_SIZE = SIZE // BOARD_SIZE
 
+random_boardsize = 0
+EXPAND_START_TURN = 15 #DEFAULT=15 何ターンめから盤面拡張を開始するか
+random_boardsize_percentage = 5 #DEFAULT=1 盤面が拡張される確率
+
 # Pygameの初期化
 pygame.init()
 screen = pygame.display.set_mode((SIZE, SIZE))
@@ -29,6 +33,7 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
+        self.turn_count = 0 #ターンをカウントする変数を追加
 
     def draw_board(self):
         screen.fill(GREEN)
@@ -105,6 +110,12 @@ class Othello:
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
             self.flip_stones(x, y)
+
+            self.turn_count += 1 #ターンが進むごとに変数に加算
+            if self.turn_count >= EXPAND_START_TURN:
+                self.expand_board()
+
+
             self.turn = WHITE if self.turn == BLACK else BLACK
             if not self.has_valid_move() or self.is_board_full():
                 self.turn = WHITE if self.turn == BLACK else BLACK
@@ -121,6 +132,24 @@ class Othello:
         pygame.time.wait(10000)
         pygame.quit()
         sys.exit()
+
+    def expand_board(self): #1か2のどちらかをランダムで選択して盤面を拡張
+        global BOARD_SIZE, GRID_SIZE
+        random_boardsize = random.randint(1, 100)
+        old_size = len(self.board)
+
+        if random_boardsize <= random_boardsize_percentage:
+            new_size = old_size + random.randint(1, 2)
+            print(f"ボードサイズが {old_size} から {new_size}に拡張されました。")
+
+            for row in self.board:
+                row.extend([None] * (new_size - old_size))
+
+            for _ in range(new_size - old_size):
+                self.board.append([None] * new_size)
+
+            BOARD_SIZE = new_size
+            GRID_SIZE = SIZE // BOARD_SIZE
 
 def main():
     game = Othello()
