@@ -7,7 +7,7 @@ WHITE = (255, 255, 255)
 GREEN = (0, 128, 0)
 YELLOW = (255, 155, 0)
 SIZE = 600
-BOARD_SIZE = 6
+BOARD_SIZE = 8
 GRID_SIZE = SIZE // BOARD_SIZE
 
 # Pygameの初期化
@@ -24,6 +24,9 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
+        #SP関数
+        self.black_sp = 0
+        self.white_sp = 0
 
     def draw_board(self):
         screen.fill(GREEN)
@@ -65,17 +68,26 @@ class Othello:
     
     def flip_stones(self, x, y):
         opponent = WHITE if self.turn == BLACK else BLACK
-        for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+        flip_count = 0
+
+        for dx, dy in [(-1, -1), (-1, 0), (-1, 1),
+                   (0, -1), (0, 1),
+                   (1, -1), (1, 0), (1, 1)]:
+
             pieces_to_flip = []
             nx, ny = x + dx, y + dy
+
             while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.board[nx][ny] == opponent:
                 pieces_to_flip.append((nx, ny))
                 nx += dx
                 ny += dy
+
             if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.board[nx][ny] == self.turn:
                 for px, py in pieces_to_flip:
                     self.board[px][py] = self.turn
+                flip_count += len(pieces_to_flip)
 
+        return flip_count
     def has_valid_move(self):
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
@@ -99,13 +111,15 @@ class Othello:
             self.display_result(result)
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
-            self.flip_stones(x, y)
+            flip = self.flip_stones(x, y)
+            self.add_skill_point(flip)
             self.turn = WHITE if self.turn == BLACK else BLACK
             if not self.has_valid_move() or self.is_board_full():
                 self.turn = WHITE if self.turn == BLACK else BLACK
                 if not self.has_valid_move():
                     result = self.game_end()
                     self.display_result(result)
+                    
 
     def display_result(self, result):
         font = pygame.font.Font(None, 74)
@@ -116,6 +130,21 @@ class Othello:
         pygame.time.wait(10000)
         pygame.quit()
         sys.exit()
+    #景駿新規コード
+    def add_skill_point(self, point):
+        if self.turn == BLACK:
+            self.black_sp += point
+        else:
+            self.white_sp += point
+    def draw_sp(self):
+        font = pygame.font.Font(None, 36)
+
+        black_text = font.render(f"Black SP : {self.black_sp}", True, BLACK)
+        white_text = font.render(f"White SP : {self.white_sp}", True, WHITE)
+
+        screen.blit(black_text, (10, 10))
+        screen.blit(white_text, (10, 40))
+
 
 def main():
     game = Othello()
@@ -130,9 +159,11 @@ def main():
                 y //= GRID_SIZE
                 game.next_move(x, y)
         game.draw_board()
+        game.draw_sp()
         pygame.display.flip()
     pygame.quit()
     sys.exit()
+
 
 if __name__ == "__main__":
     main()
