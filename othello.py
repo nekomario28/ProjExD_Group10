@@ -1,12 +1,6 @@
 import pygame
 import sys
-import os
-import random
-import math
-# GIFを分解するために標準ライブラリを使用
-import tkinter as tk
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+import random ##disasuter no tameni
 
 # 定数の定義
 BLACK = (0, 0, 0)
@@ -15,6 +9,7 @@ GREEN = (0, 128, 0)
 YELLOW = (255, 155, 0)
 SIZE = 600
 BOARD_SIZE = 8
+
 GRID_SIZE = SIZE // BOARD_SIZE
 
 random_boardsize = 0
@@ -113,12 +108,24 @@ class Othello:
         self.board[mid][mid - 1] = BLACK
         self.board[mid][mid] = WHITE
         self.turn = BLACK
-        self.turn_count = 0 #ターンをカウントする変数を追加
+        self.turn_count = 0  ##ターンカウント
 
-        # --- 追加: アニメーションエフェクトの初期化 ---
-        self.effects = []
-        gif_path = "fig/reverse.gif"
-        self.effect_frames = load_gif_frames(gif_path, (GRID_SIZE, GRID_SIZE)) #アニメーションのフレームをロード
+        
+        
+
+        self.mine_count = 0      # 地雷の数（変更可）
+        self.mines = []              # 地雷の座標を保存(変更不可)
+        self.disaster_count = 0      # 災害発生回数(変更不可)
+        self.max_disaster = 2        # 災害最大2回(変更可)
+
+        while len(self.mines) < self.mine_count:
+            x = random.randint(0, BOARD_SIZE - 1)
+            y = random.randint(0, BOARD_SIZE - 1)
+
+            # 最初の4つの石の場所には置かない
+            if self.board[x][y] is None and (x, y) not in self.mines:
+                self.mines.append((x, y))
+
     def draw_board(self):
         screen.fill(GREEN)
         for x in range(BOARD_SIZE):
@@ -204,12 +211,26 @@ class Othello:
             self.display_result(result)
         elif self.is_valid_move(x, y):
             self.board[x][y] = self.turn
+
+            # 地雷
+            if (x, y) in self.mines:
+                print("地雷発動！")
+                self.board[x][y] = None      # 置いた石を消す
+                self.mines.remove((x, y))    # 地雷は一度使ったら消える
+            else:
+                self.flip_stones(x, y)
             self.flip_stones(x, y)
 
             self.turn_count += 1 #ターンが進むごとに変数に加算
             if self.turn_count >= EXPAND_START_TURN:
                 self.expand_board()
 
+
+
+
+            
+            if self.turn_count >= 15:
+                self.disaster()
 
             self.turn = WHITE if self.turn == BLACK else BLACK
             if not self.has_valid_move() or self.is_board_full():
@@ -262,6 +283,30 @@ class Othello:
 
             BOARD_SIZE = new_size
             GRID_SIZE = SIZE // BOARD_SIZE
+    
+    def disaster(self):
+        if self.disaster_count >= self.max_disaster:
+            return
+        r = random.random()  # 0.0以上1.0未満
+        if self.disaster_count < self.max_disaster:
+            if r <= 0.05:
+                print("災害発生！10個の駒が消えました！")
+
+                # 石がある場所を集める
+                stones = []
+                for x in range(BOARD_SIZE):
+                    for y in range(BOARD_SIZE):
+                        if self.board[x][y] is not None:
+                            stones.append((x, y))
+
+                # 最大10個選ぶ
+                num = min(10, len(stones))
+                remove_stones = random.sample(stones, num)
+                # 災害発生回数を増やす
+                self.disaster_count += 1
+                # 消す
+                for x, y in remove_stones:
+                    self.board[x][y] = None
 
 def main():
     game = Othello()
