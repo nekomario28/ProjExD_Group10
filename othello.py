@@ -122,13 +122,13 @@ class Othello:
         pygame.quit()
         sys.exit()
     
-    def guide(self):
+    def guide(self) -> None:
         """
         次における所を表示する関数
         引数:なし
         戻り値:なし
         """
-        guide_cir = pygame.Surface((GRID_SIZE, GRID_SIZE)) #一辺がGRID_SIZEの正方形Surfaceを生成
+        guide_cir : pygame.Surface = pygame.Surface((GRID_SIZE, GRID_SIZE))  #一辺がGRID_SIZEの正方形Surfaceを生成
         guide_cir.set_alpha(120) # 画像全体の透明度を設定
         guide_cir.set_colorkey((0,0,0)) #Surfaceの透過色を設定
         
