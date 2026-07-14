@@ -30,10 +30,10 @@ class Othello:
         
         
 
-        self.mine_count = 1          # 地雷の数（変更可能）
-        self.mines = []              # 地雷の座標を保存
-        self.disaster_count = 0      # 災害発生回数
-        self.max_disaster = 2        # 災害最大2回
+        self.mine_count = 0      # 地雷の数（変更可）
+        self.mines = []              # 地雷の座標を保存(変更不可)
+        self.disaster_count = 0      # 災害発生回数(変更不可)
+        self.max_disaster = 2        # 災害最大2回(変更可)
 
         while len(self.mines) < self.mine_count:
             x = random.randint(0, BOARD_SIZE - 1)
@@ -153,24 +153,25 @@ class Othello:
         if self.disaster_count >= self.max_disaster:
             return
         r = random.random()  # 0.0以上1.0未満
+        if self.disaster_count < self.max_disaster:
+            if r <= 0.05:
+                print("災害発生！10個の駒が消えました！")
 
-        if r <= 0.05:
-            print("災害発生！10個の駒が消えました！")
+                # 石がある場所を集める
+                stones = []
+                for x in range(BOARD_SIZE):
+                    for y in range(BOARD_SIZE):
+                        if self.board[x][y] is not None:
+                            stones.append((x, y))
 
-            # 石がある場所を集める
-            stones = []
-            for x in range(BOARD_SIZE):
-                for y in range(BOARD_SIZE):
-                    if self.board[x][y] is not None:
-                        stones.append((x, y))
-
-            # 最大10個選ぶ
-            num = min(10, len(stones))
-            remove_stones = random.sample(stones, num)
-
-            # 消す
-            for x, y in remove_stones:
-                self.board[x][y] = None
+                # 最大10個選ぶ
+                num = min(10, len(stones))
+                remove_stones = random.sample(stones, num)
+                # 災害発生回数を増やす
+                self.disaster_count += 1
+                # 消す
+                for x, y in remove_stones:
+                    self.board[x][y] = None
 
 def main():
     game = Othello()
