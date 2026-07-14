@@ -2,6 +2,8 @@ import pygame
 import sys
 import random ##disasuter no tameni
 import tkinter as tk
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # 定数の定義
 BLACK = (0, 0, 0)
@@ -15,7 +17,7 @@ GRID_SIZE = SIZE // BOARD_SIZE
 
 random_boardsize = 0
 EXPAND_START_TURN = 15 #DEFAULT=15 何ターンめから盤面拡張を開始するか
-random_boardsize_percentage = 5 #DEFAULT=1 盤面が拡張される確率
+random_boardsize_percentage = 2 #DEFAULT=2 盤面が拡張される確率
 
 # Pygameの初期化
 pygame.init()
