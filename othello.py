@@ -132,7 +132,7 @@ class Othello:
         self.white_sp = 0
         # エフェクト
         self.effect_frames = load_gif_frames(
-            "effect.gif",
+            "fig/reverse.gif",
             (GRID_SIZE, GRID_SIZE)
         )
         self.effects = []
