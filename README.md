@@ -1,4 +1,4 @@
-# オセロ
+# オセロ 2.0
 
 ![title](fig/othello.png)
 
