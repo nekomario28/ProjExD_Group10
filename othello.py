@@ -132,6 +132,23 @@ class Othello:
         pygame.time.wait(10000)
         pygame.quit()
         sys.exit()
+    
+    def guide(self) -> None:
+        """
+        次における所を表示する関数
+        引数:なし
+        戻り値:なし
+        """
+        guide_cir : pygame.Surface = pygame.Surface((GRID_SIZE, GRID_SIZE))  #一辺がGRID_SIZEの正方形Surfaceを生成
+        guide_cir.set_alpha(120) # 画像全体の透明度を設定
+        guide_cir.set_colorkey((0,0,0)) #Surfaceの透過色を設定
+        
+        for x in range(BOARD_SIZE):
+            for y in range(BOARD_SIZE):
+                if self.is_valid_move(x,y):
+                    guide_cir.fill((0, 0, 0)) #塗りつぶし
+                    pygame.draw.circle(guide_cir, (255, 255, 255), (GRID_SIZE // 2, GRID_SIZE // 2), GRID_SIZE // 8) #Surfaceの中心に半径GRID_SIZE // 8の白い円を描画
+                    screen.blit(guide_cir, (x * GRID_SIZE, y * GRID_SIZE)) #画像SurfaceをスクリーンSurfaceに貼り付ける
 
     def expand_board(self): #1か2のどちらかをランダムで選択して盤面を拡張
         global BOARD_SIZE, GRID_SIZE
@@ -164,7 +181,9 @@ def main():
                 y //= GRID_SIZE
                 game.next_move(x, y)
         game.draw_board()
+        game.guide()
         pygame.display.flip()
+        pygame.display.update()
     pygame.quit()
     sys.exit()
 
